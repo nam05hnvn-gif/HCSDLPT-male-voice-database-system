@@ -1,0 +1,76 @@
+THỐNG KÊ BỘ DỮ LIỆU GIỌNG NAM
+========================================
+Tổng số file: 2102
+Tổng số người nói: 54
+Tổng thời lượng: 5.07 giờ
+Thời lượng ngắn nhất: 6.000 giây
+Thời lượng dài nhất: 35.440 giây
+Thời lượng trung bình: 8.683 giây
+Thời lượng trung vị: 7.940 giây
+Tần số lấy mẫu: 16000 Hz
+Số kênh: mono
+Giới tính: nam
+Định dạng: WAV, PCM 16-bit
+Khoảng thời lượng chọn: >= 6 giây
+
+NGUỒN DỮ LIỆU
+- LibriSpeech (dev-clean, test-clean): 878 file, 40 speaker
+- VoxCeleb1: 1224 file, 14 speaker
+
+SỐ FILE THEO NGƯỜI NÓI (LibriSpeech)
+Speaker 61: 22 file
+Speaker 174: 15 file
+Speaker 251: 32 file
+Speaker 260: 21 file
+Speaker 422: 5 file
+Speaker 652: 31 file
+Speaker 672: 18 file
+Speaker 777: 21 file
+Speaker 908: 23 file
+Speaker 1089: 20 file
+Speaker 1188: 15 file
+Speaker 1272: 25 file
+Speaker 1320: 31 file
+Speaker 2078: 16 file
+Speaker 2086: 24 file
+Speaker 2300: 16 file
+Speaker 2428: 27 file
+Speaker 2803: 22 file
+Speaker 2830: 27 file
+Speaker 2902: 9 file
+Speaker 3000: 16 file
+Speaker 3170: 21 file
+Speaker 3752: 19 file
+Speaker 4077: 11 file
+Speaker 5105: 19 file
+Speaker 5536: 30 file
+Speaker 5639: 15 file
+Speaker 5694: 27 file
+Speaker 6241: 34 file
+Speaker 6295: 33 file
+Speaker 6930: 19 file
+Speaker 7021: 21 file
+Speaker 7127: 24 file
+Speaker 7176: 24 file
+Speaker 7729: 23 file
+Speaker 7976: 36 file
+Speaker 8224: 7 file
+Speaker 8230: 21 file
+Speaker 8297: 32 file
+Speaker 8455: 26 file
+
+SỐ FILE THEO NGƯỜI NÓI (VoxCeleb1)
+Speaker id10002: 60 file
+Speaker id10003: 53 file
+Speaker id10017: 51 file
+Speaker id10018: 128 file
+Speaker id10045: 130 file
+Speaker id10393: 148 file
+Speaker id10519: 31 file
+Speaker id10852: 82 file
+Speaker id10901: 35 file
+Speaker id10955: 94 file
+Speaker id10956: 117 file
+Speaker id11071: 50 file
+Speaker id11090: 109 file
+Speaker id11130: 136 file
