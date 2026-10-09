@@ -1,0 +1,56 @@
+THỐNG KÊ BỘ DỮ LIỆU GIỌNG NAM
+========================================
+Tổng số file: 1791
+Tổng số người nói: 40
+Tổng thời lượng: 3.18 giờ
+Thời lượng ngắn nhất: 3.000 giây
+Thời lượng dài nhất: 11.985 giây
+Thời lượng trung bình: 6.390 giây
+Thời lượng trung vị: 5.895 giây
+Tần số lấy mẫu: 16000 Hz
+Số kênh: mono
+Giới tính: nam
+Định dạng: FLAC, PCM 16-bit
+Khoảng thời lượng chọn: 3-12 giây
+
+SỐ FILE THEO NGƯỜI NÓI
+Speaker 61: 86 file
+Speaker 174: 36 file
+Speaker 251: 59 file
+Speaker 260: 62 file
+Speaker 422: 10 file
+Speaker 652: 61 file
+Speaker 672: 55 file
+Speaker 777: 59 file
+Speaker 908: 42 file
+Speaker 1089: 46 file
+Speaker 1188: 23 file
+Speaker 1272: 57 file
+Speaker 1320: 49 file
+Speaker 2078: 26 file
+Speaker 2086: 38 file
+Speaker 2300: 23 file
+Speaker 2428: 64 file
+Speaker 2803: 39 file
+Speaker 2830: 68 file
+Speaker 2902: 20 file
+Speaker 3000: 26 file
+Speaker 3170: 30 file
+Speaker 3752: 62 file
+Speaker 4077: 17 file
+Speaker 5105: 35 file
+Speaker 5536: 45 file
+Speaker 5639: 19 file
+Speaker 5694: 61 file
+Speaker 6241: 66 file
+Speaker 6295: 61 file
+Speaker 6930: 57 file
+Speaker 7021: 37 file
+Speaker 7127: 50 file
+Speaker 7176: 52 file
+Speaker 7729: 32 file
+Speaker 7976: 65 file
+Speaker 8224: 10 file
+Speaker 8230: 27 file
+Speaker 8297: 61 file
+Speaker 8455: 55 file
