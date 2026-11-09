@@ -19,6 +19,7 @@ RESULTS_DIR = ROOT / "results"
 
 
 def connection_settings():
+    """Đọc cấu hình MySQL từ .env/biến môi trường và validate tên database."""
     load_dotenv(ROOT / ".env")
     user = os.getenv("DB_USER", "").strip()
     name = os.getenv("DB_NAME", "voice_similarity").strip()
@@ -38,6 +39,7 @@ def connection_settings():
 
 
 def connect(use_database=True):
+    """Mở kết nối MySQL cục bộ, tùy chọn dùng database đích."""
     settings = connection_settings()
     if not use_database:
         settings.pop("database")
@@ -45,6 +47,7 @@ def connect(use_database=True):
 
 
 def resolve_audio_path(relative_path):
+    """Giải quyết đường dẫn audio tương đối và chặn truy cập ngoài thư mục dataset."""
     path = (ROOT / Path(*PureWindowsPath(relative_path).parts)).resolve()
     if not path.is_relative_to(DATA_DIR.resolve()):
         raise ValueError("Đường dẫn âm thanh nằm ngoài Dataset voices/dataset_final.")
@@ -52,6 +55,7 @@ def resolve_audio_path(relative_path):
 
 
 def initialize_database(rebuild=False):
+    """Tạo database và 3 bảng nếu chưa có; từ chối ghi đè dữ liệu sẵn có."""
     name = connection_settings()["database"]
     with connect(use_database=False) as conn:
         with conn.cursor() as cursor:
@@ -114,6 +118,7 @@ def initialize_database(rebuild=False):
 
 
 def load_dataset():
+    """Đọc metadata và 65 đặc trưng thô của các bản ghi ready từ MySQL."""
     columns = ", ".join(f"v.`{name}`" for name in FEATURE_NAMES)
     with connect() as conn, conn.cursor(dictionary=True) as cursor:
         cursor.execute(f"""
@@ -129,6 +134,7 @@ def load_dataset():
 
 
 def load_stats():
+    """Đọc 65 dòng thống kê median/mean/std đã lưu trong feature_stats."""
     with connect() as conn, conn.cursor(dictionary=True) as cursor:
         cursor.execute("SELECT feature_name, median, mean, std FROM feature_stats")
         rows = {row["feature_name"]: row for row in cursor.fetchall()}
@@ -139,6 +145,7 @@ def load_stats():
 
 
 def get_overview():
+    """Thống kê số tệp, người nói, thời lượng theo nguồn và trạng thái."""
     with connect() as conn, conn.cursor(dictionary=True) as cursor:
         cursor.execute("""
             SELECT source, status, COUNT(*) AS files,
@@ -150,6 +157,7 @@ def get_overview():
 
 
 def build_database(rebuild=False, limit=None):
+    """Duyệt manifest, trích đặc trưng từng WAV, lưu MySQL và tính thống kê chuẩn hóa."""
     with MANIFEST.open(encoding="utf-8-sig", newline="") as stream:
         rows = list(csv.DictReader(stream))
     if limit is not None:
@@ -221,6 +229,7 @@ def build_database(rebuild=False, limit=None):
 
 
 def main():
+    """CLI xây dữ liệu, kiểm tra kết nối hoặc xây lại có xác nhận."""
     parser = argparse.ArgumentParser(description="Tạo 3 bảng MySQL và trích đặc trưng bộ giọng nói.")
     parser.add_argument("--rebuild", action="store_true", help="XÓA dữ liệu dẫn xuất trong 3 bảng ứng dụng rồi xây lại.")
     parser.add_argument("--limit", type=int, help="Chỉ dùng để chạy thử trong CSDL riêng.")

@@ -122,6 +122,7 @@ EXTRACTOR_SETTINGS = {
 
 
 def _validate_wave_header(data):
+    """Kiểm tra cấu trúc khối RIFF/WAV để phát hiện tệp cắt cụt trước khi giải mã."""
     byte_order = "little" if data[:4] == b"RIFF" else "big"
     end = int.from_bytes(data[4:8], byte_order) + 8
     if end < 12 or end > len(data):
@@ -146,6 +147,7 @@ def _validate_wave_header(data):
 
 
 def read_audio(source):
+    """Đọc WAV/FLAC, kiểm tra hợp lệ, chuyển mono 16 kHz và tính hash nội dung âm thanh."""
     settings = EXTRACTOR_SETTINGS
     limit = settings["max_file_size_bytes"]
     if isinstance(source, bytes):
@@ -229,6 +231,7 @@ def read_audio(source):
 
 
 def frame_signal(y, frame_length=400, hop_length=160):
+    """Chia tín hiệu thành khung 400 mẫu, bước 160 mẫu, bỏ phần cuối thiếu khung."""
     y = np.asarray(y, dtype=np.float64)
     if y.ndim != 1 or not np.isfinite(y).all():
         raise ValueError("Tín hiệu chia khung phải là mảng mono một chiều hữu hạn.")
@@ -242,6 +245,7 @@ def frame_signal(y, frame_length=400, hop_length=160):
 
 
 def calculate_spectrum(frames, n_fft=512):
+    """Tính phổ công suất mỗi khung bằng cửa sổ Hann tuần hoàn và FFT 512 điểm."""
     frames = np.asarray(frames, dtype=np.float64)
     if frames.ndim != 2 or frames.shape[1] < 2 or not np.isfinite(frames).all():
         raise ValueError("Các khung phổ phải là mảng hai chiều hữu hạn.")
@@ -252,6 +256,7 @@ def calculate_spectrum(frames, n_fft=512):
 
 
 def spectral_features(power, sample_rate=16000, n_fft=512, rolloff_fraction=0.85):
+    """Tính centroid, bandwidth, rolloff 85% và flux từ ma trận phổ công suất."""
     power = np.asarray(power, dtype=np.float64)
     if power.ndim != 2 or power.shape[1] != n_fft // 2 + 1:
         raise ValueError("Ma trận công suất không khớp với kích thước FFT.")
@@ -284,6 +289,7 @@ def spectral_features(power, sample_rate=16000, n_fft=512, rolloff_fraction=0.85
 
 
 def mel_filterbank(sample_rate=16000, n_fft=512, n_mels=40, fmin=0.0, fmax=None):
+    """Tạo 40 bộ lọc tam giác thang Mel HTK, không chuẩn hóa diện tích."""
     if fmax is None:
         fmax = sample_rate / 2.0
     if sample_rate <= 0 or not 0 <= fmin < fmax <= sample_rate / 2.0:
@@ -301,6 +307,7 @@ def mel_filterbank(sample_rate=16000, n_fft=512, n_mels=40, fmin=0.0, fmax=None)
 
 
 def calculate_delta(mfcc, width=2):
+    """Tính delta hồi quy W=2 trên chuỗi MFCC, lặp biên, mẫu số 10."""
     mfcc = np.asarray(mfcc, dtype=np.float64)
     if mfcc.ndim not in (1, 2) or not np.isfinite(mfcc).all():
         raise ValueError("Chuỗi tính delta phải là mảng một/hai chiều hữu hạn, trục đầu là thời gian.")
@@ -320,6 +327,7 @@ def calculate_delta(mfcc, width=2):
 
 
 def _mean_std(values):
+    """Tính mean và std (ddof=0) trên quan sát hữu hạn, trả NaN nếu rỗng."""
     values = np.asarray(values, dtype=np.float64)
     values = values[np.isfinite(values)]
     if values.size == 0:
@@ -328,6 +336,7 @@ def _mean_std(values):
 
 
 def _voiced_at_times(times, pitch_times, voiced):
+    """Nội suy masker hữu thanh sang thời điểm formant/HNR theo mẫu pitch gần nhất."""
     right = np.searchsorted(pitch_times, times)
     right = np.clip(right, 0, len(pitch_times) - 1)
     left = np.maximum(right - 1, 0)
@@ -338,6 +347,7 @@ def _voiced_at_times(times, pitch_times, voiced):
 
 
 def _voice_features(y, include_frames):
+    """Đo F0, formant Burg, HNR, jitter/shimmer bằng Praat trên vùng hữu thanh."""
     s = EXTRACTOR_SETTINGS
     notices = []
     sound = parselmouth.Sound(y, sampling_frequency=s["sample_rate"])
@@ -428,6 +438,7 @@ def _voice_features(y, include_frames):
 
 
 def extract_features(source, include_frames=False):
+    """Trích đủ 65 đặc trưng từ một tệp âm thanh, kèm thông tin và cảnh báo."""
     y, info = read_audio(source)
     s = EXTRACTOR_SETTINGS
     notices = []
@@ -472,6 +483,7 @@ def extract_features(source, include_frames=False):
 
 
 def _feature_matrix(matrix, allow_vector):
+    """Chuẩn hóa đầu vào thành ma trận 65 chiều và kiểm tra giá trị vô cực."""
     try:
         data = np.asarray(matrix, dtype=np.float64)
     except (TypeError, ValueError, OverflowError) as exc:
@@ -487,6 +499,7 @@ def _feature_matrix(matrix, allow_vector):
 
 
 def fit_normalizer(matrix):
+    """Tính median/mean/std trên ma trận gallery để điền khuyết và chuẩn hóa z-score."""
     data = _feature_matrix(matrix, allow_vector=False)
     if data.shape[0] == 0:
         raise ValueError("Gallery rỗng, không thể tính thống kê chuẩn hóa.")
@@ -508,6 +521,7 @@ def fit_normalizer(matrix):
 
 
 def normalize(matrix, stats):
+    """Điền khuyết bằng median rồi chuẩn hóa z-score; chiều std=0 cho z=0."""
     data = _feature_matrix(matrix, allow_vector=True)
     parameters = {}
     for name in ("median", "mean", "std"):

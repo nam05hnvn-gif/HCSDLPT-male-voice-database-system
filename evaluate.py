@@ -26,6 +26,7 @@ def speaker(row):
 
 
 def _source_family(source):
+    """Xác định họ nguồn libri/vox để chọn cách tách nhóm ghi."""
     value = str(source).lower()
     if value.startswith("libri"):
         return "libri"
@@ -51,6 +52,7 @@ def recording_group(row):
 
 
 def _audio_hash(row):
+    """Lấy hash âm thanh chuẩn hóa chữ thường, báo lỗi nếu thiếu."""
     value = row.get("audio_hash")
     if value is None or not str(value).strip():
         raise ValueError("Missing audio_hash: exact-duplicate exclusion is unverifiable.")
@@ -58,14 +60,17 @@ def _audio_hash(row):
 
 
 def _order_key(row):
+    """Khóa sắp xếp tất định theo đường dẫn, người nói và id bản ghi."""
     return (str(row.get("file_path", "")), *speaker(row), str(row.get("id", "")))
 
 
 def _identity(identity):
+    """Chuyển cặp (source, speaker_id) thành dict nhãn người nói."""
     return {"source": identity[0], "speaker_id": identity[1]}
 
 
 def deduplicate(records):
+    """Loại bản trùng hash cùng nhãn; nhãn mâu thuẫn thì loại toàn bộ nhóm."""
     buckets = {}
     for index, row in enumerate(records):
         speaker(row)
@@ -102,6 +107,7 @@ def deduplicate(records):
 
 
 def _speaker_groups(records):
+    """Gom chỉ số bản ghi theo người nói rồi theo nhóm chương/video."""
     groups = {}
     for index, row in enumerate(records):
         groups.setdefault(speaker(row), {}).setdefault(recording_group(row), []).append(index)
@@ -109,6 +115,7 @@ def _speaker_groups(records):
 
 
 def _assert_split(records, split, unknown=False):
+    """Kiểm tra split không trùng file/hash/nhóm ghi và đúng phạm vi người nói."""
     gallery, queries = set(split["gallery_indices"]), set(split["query_indices"])
     assert not gallery & queries, "Gallery/query file overlap"
     assert gallery | queries == set(range(len(records))), "Incomplete split membership"
@@ -131,6 +138,7 @@ def _assert_split(records, split, unknown=False):
 
 
 def known_split(records, seed=SEED):
+    """Chia query/gallery theo nhóm ghi, giữ một nhóm làm query cho người có >=2 nhóm."""
     rng = random.Random(seed)
     grouped = _speaker_groups(records)
     gallery, queries, eligible, single, heldout, counts = [], [], [], [], [], []
@@ -155,6 +163,7 @@ def known_split(records, seed=SEED):
 
 
 def unknown_split(records, seed=SEED):
+    """Giữ toàn bộ 4 người Libri + 2 người Vox ngoài gallery làm thí nghiệm người lạ."""
     rng = random.Random(seed)
     identities = sorted({speaker(row) for row in records})
     heldout = set()
@@ -185,11 +194,13 @@ def metrics(query, candidates):
 
 
 def _means(rows):
+    """Trung bình các metric trên danh sách dòng kết quả."""
     return {name: float(np.mean([row[name] for row in rows])) if rows else None
             for name in METRIC_NAMES}
 
 
 def _aggregate(rows):
+    """Tổng hợp metric theo query (micro), người nói (macro) và từng nguồn."""
     grouped = {}
     for row in rows:
         grouped.setdefault(speaker(row), []).append(row)
@@ -209,6 +220,7 @@ def _aggregate(rows):
 
 
 def _distribution(values):
+    """Thống kê phân phối min/mean/median/p95/max của dãy giá trị."""
     array = np.asarray(values, dtype=float)
     array = array[np.isfinite(array)]
     if not len(array):
@@ -219,6 +231,7 @@ def _distribution(values):
 
 
 def _timing(values):
+    """Tổng thời gian và phân phối thời gian mỗi truy vấn."""
     return {"total_seconds": float(sum(values)), "per_query_seconds": _distribution(values)}
 
 
@@ -240,6 +253,7 @@ def _clean_json(value):
 
 
 def _prepare(records, matrix):
+    """Lọc bản ghi hợp lệ, khử trùng lặp toàn cục và kiểm tra đặc trưng trước đánh giá."""
     matrix = np.asarray(matrix, dtype=float)
     if matrix.shape != (len(records), FEATURE_COUNT):
         raise ValueError(f"Expected raw matrix ({len(records)}, {FEATURE_COUNT}), got {matrix.shape}.")
@@ -274,6 +288,7 @@ def _prepare(records, matrix):
 
 
 def _normalize_split(records, matrix, split, fit_normalizer, normalize):
+    """Fit thống kê chỉ trên gallery rồi chuẩn hóa cả gallery lẫn query."""
     gallery_indices = split["gallery_indices"]
     if not gallery_indices:
         raise ValueError("Cannot fit a normalizer without gallery files.")
@@ -287,6 +302,7 @@ def _normalize_split(records, matrix, split, fit_normalizer, normalize):
 
 
 def _rank(query, query_z, gallery_z, gallery, rank_candidates, indices=None, explain=False):
+    """Gọi xếp hạng ứng viên, đo thời gian và ghi nhận lỗi nếu thất bại."""
     start = time.perf_counter()
     try:
         candidates = rank_candidates(query_z, gallery_z, gallery, k=K,
@@ -299,6 +315,7 @@ def _rank(query, query_z, gallery_z, gallery, rank_candidates, indices=None, exp
 
 def _example(index, records, matrix, normalized, stats, gallery_z, gallery,
              rank_candidates, comparison=False):
+    """Xuất ví dụ truy vấn đầy đủ: vector, thống kê, top 5 và đối chiếu cepstral."""
     query = records[index]
     candidates, _, error = _rank(query, normalized[index], gallery_z, gallery,
                                   rank_candidates, explain=True)
@@ -314,6 +331,7 @@ def _example(index, records, matrix, normalized, stats, gallery_z, gallery,
 
 
 def _coverage(records, split):
+    """Thống kê phạm vi phủ của split known theo nguồn và người nói."""
     result = {"files": len(records), "speakers": len({speaker(row) for row in records}),
               "gallery_files": len(split["gallery_indices"]), "query_files": len(split["query_indices"]),
               "gallery_speakers": len({speaker(records[i]) for i in split["gallery_indices"]}),
@@ -332,6 +350,7 @@ def _coverage(records, split):
 
 
 def _membership(original, retained_indices, split, exclusions):
+    """Ghi vai trò gallery/query/excluded của từng bản ghi gốc kèm lý do loại."""
     gallery = {retained_indices[i] for i in split["gallery_indices"]}
     queries = {retained_indices[i] for i in split["query_indices"]}
     rows = []
@@ -352,6 +371,7 @@ def _membership(original, retained_indices, split, exclusions):
 
 
 def evaluate(records, matrix, seed=SEED):
+    """Đánh giá known/unknown trong bộ nhớ, không ghi đè thống kê demo."""
     from features import FEATURE_GROUPS, FEATURE_NAMES, fit_normalizer, normalize
     from search import rank_candidates
 
@@ -569,6 +589,7 @@ def write_results(payload, directory):
 
 
 def main():
+    """CLI đọc đặc trưng MySQL, chạy đánh giá seed 42 và xuất 7 artifact báo cáo."""
     parser = argparse.ArgumentParser(description="Read stored MySQL raw features and export seed-42 retrieval evaluation.")
     parser.parse_args()
     from database import RESULTS_DIR, ROOT, get_overview, load_dataset, load_stats

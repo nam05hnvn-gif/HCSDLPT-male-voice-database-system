@@ -14,12 +14,14 @@ from search import rank_candidates, search_audio
 
 
 def wav_bytes(samples, sample_rate=16000):
+    """Đóng gói mảng mẫu thành byte WAV trong bộ nhớ cho kiểm thử."""
     stream = io.BytesIO()
     sf.write(stream, samples, sample_rate, format="WAV", subtype="PCM_16")
     return stream.getvalue()
 
 
 def synthetic_voice(sample_rate=16000, seconds=1.2):
+    """Tạo tín hiệu giọng nói tổng hợp (hài âm + nhiễu) cho kiểm thử."""
     t = np.arange(int(sample_rate * seconds)) / sample_rate
     return 0.2 * np.sin(2 * np.pi * 120 * t) + 0.05 * np.sin(2 * np.pi * 240 * t)
 

@@ -30,6 +30,7 @@ DB_GUIDANCE = (
 
 
 def show_database_overview():
+    """Hiển thị tổng quan MySQL và phương pháp ở thanh bên."""
     with st.sidebar:
         st.header("Dữ liệu MySQL")
         try:
@@ -108,6 +109,7 @@ def prepare_preview(audio_bytes):
 
 
 def show_warnings(payload):
+    """Gộp và hiển thị cảnh báo của truy vấn và pipeline, khử trùng lặp."""
     warnings = list(payload["query_info"].get("warnings", []))
     warnings.extend(payload.get("warnings", []))
     for message in dict.fromkeys(warnings):
@@ -115,6 +117,7 @@ def show_warnings(payload):
 
 
 def make_top_table(results):
+    """Tạo bảng DataFrame top 5 kết quả cho giao diện và xuất CSV."""
     return pd.DataFrame([
         {
             "Hạng": item["rank"],
@@ -131,6 +134,7 @@ def make_top_table(results):
 
 
 def show_players(results):
+    """Phát âm thanh từng kết quả trong expander, đọc qua đường dẫn an toàn."""
     for item in results:
         filename = PureWindowsPath(item["file_path"]).name
         speaker = item.get("speaker_name") or item["speaker_id"]
@@ -152,6 +156,7 @@ def show_players(results):
 
 
 def show_calculations(payload, results):
+    """Trình bày các bước tính: 65 đặc trưng, z-score, đóng góp nhóm và sai khác."""
     with st.expander("Các bước tính toán"):
         st.markdown("**1. Tiền xử lý và trích đặc trưng**")
         st.write(
@@ -248,6 +253,7 @@ def show_calculations(payload, results):
 
 
 def show_results(payload):
+    """Hiển thị kết quả: metric, top 5, nghe audio và tải JSON/CSV."""
     st.divider()
     st.header("Kết quả tương đồng")
     info = payload["query_info"]
@@ -312,9 +318,10 @@ def show_results(payload):
 
 
 def main():
+    """Luồng giao diện chính: upload, xem trước, tìm kiếm và hiển thị kết quả."""
     st.set_page_config(page_title="Tìm kiếm giọng nói nam", layout="wide")
     st.title("Tìm kiếm giọng nói nam")
-    st.write("Demo sinh viên: tìm các tệp gần nhất về đặc trưng âm học trong bộ dữ liệu giọng nói nam.")
+    st.write("Tìm các tệp gần nhất về đặc trưng âm học trong bộ dữ liệu giọng nói nam.")
     st.caption("Input → Tiền xử lý → Trích đặc trưng → So sánh → Tương đồng → Top 5")
     st.caption("Không tự xác định giới tính và không xác thực danh tính người nói.")
     show_database_overview()

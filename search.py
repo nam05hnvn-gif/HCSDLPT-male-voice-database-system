@@ -12,6 +12,7 @@ from features import FEATURE_GROUPS, FEATURE_NAMES, FEATURE_UNITS, extract_featu
 
 
 def rank_candidates(query_z, matrix_z, records, k=5, exclude_hash=None, indices=None, explain=False):
+    """Tính khoảng cách Euclid trên vector z-score và trả k ứng viên gần nhất."""
     if k < 1:
         raise ValueError("Số kết quả phải lớn hơn 0.")
     selected = np.arange(len(FEATURE_NAMES)) if indices is None else np.asarray(indices, dtype=int)
@@ -43,6 +44,7 @@ def rank_candidates(query_z, matrix_z, records, k=5, exclude_hash=None, indices=
 
 
 def search_audio(source, k=5):
+    """Luồng tìm kiếm đầy đủ: trích query, nạp gallery, chuẩn hóa, xếp hạng top 5."""
     start = time.perf_counter()
     extracted = extract_features(source)
     extraction_seconds = time.perf_counter() - start
@@ -78,6 +80,7 @@ def search_audio(source, k=5):
 
 
 def save_result(result, output):
+    """Xuất kết quả tìm kiếm ra JSON và CSV để đưa vào báo cáo."""
     output = Path(output)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     with output.with_suffix(".csv").open("w", newline="", encoding="utf-8-sig") as stream:
@@ -88,6 +91,7 @@ def save_result(result, output):
 
 
 def main():
+    """CLI tìm kiếm một tệp âm thanh và lưu kết quả vào results/."""
     parser = argparse.ArgumentParser(description="Tìm 5 file giọng nói tương đồng từ MySQL.")
     parser.add_argument("audio", type=Path)
     parser.add_argument("--output", type=Path, help="Lưu kết quả JSON và CSV (thư mục phải tồn tại).")
